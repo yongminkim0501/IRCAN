@@ -1,0 +1,12 @@
+python src/1_calculate_attribution_mcq.py \
+    --model_path meta-llama/Llama-2-7b-chat-hf \
+    --data_path data/KRE/COSE/cose.json \
+    --model_name llama2-7b-chat \
+    --dataset_name COSE \
+    --output_dir results/attribution/ \
+    --gpu_id 3 \
+    --max_seq_length 512 \
+    --get_context_attr \
+    --batch_size 20 \
+    --num_batch 1 \
+    --batch_size_per_inference 10
