@@ -113,7 +113,7 @@ def completion_task_generation(model, tokenizer, args, prompt_with_context, prom
                                         max_new_tokens=10)
         full_prediction = tokenizer.decode(generate_ids[0], skip_special_tokens=True)[len(prompt_with_context):]
         pred_label = full_prediction.strip().split('.')[0]
-    else: # use CAD decoding
+    else: # use CAD decoding, adapted from https://github.com/hongshi97/CAD
         wo_tokenized_inputs = tokenizer(prompt_without_context, return_tensors="pt")
         wo_input_ids = wo_tokenized_inputs["input_ids"].to(device)
         wo_attention_mask = wo_tokenized_inputs["attention_mask"].to(device)
