@@ -1,4 +1,4 @@
-gpus=$1
+gpu_id=$1
 
 model_path=meta-llama/Llama-2-7b-chat-hf
 model_name=llama2-7b-chat

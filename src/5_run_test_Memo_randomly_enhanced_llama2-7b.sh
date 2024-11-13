@@ -44,7 +44,7 @@ for i in {1..10}; do
         --cn_dir results/cn \
         --output_dir eval_results/test_results/Memo/outputs \
         --metric_dir eval_results/test_results/Memo/metrics \
-        --gpus $gpus \
+        --gpu_id $gpu_id \
         --max_seq_length 128 \
         --enhance_cn_num ${enhance_cn_num} \
         --enhance_strength ${enhance_strength} \
@@ -69,7 +69,7 @@ for i in {1..10}; do
         --cn_dir results/cn \
         --output_dir eval_results/test_results/Memo/outputs \
         --metric_dir eval_results/test_results/Memo/metrics \
-        --gpus $gpus \
+        --gpu_id $gpu_id \
         --max_seq_length 128 \
         --enhance_cn_num ${enhance_cn_num} \
         --enhance_strength ${enhance_strength} \

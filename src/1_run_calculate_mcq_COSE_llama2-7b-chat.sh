@@ -4,7 +4,7 @@ python src/1_calculate_attribution_mcq.py \
     --model_name llama2-7b-chat \
     --dataset_name COSE \
     --output_dir results/attribution/ \
-    --gpu_id 3 \
+    --gpu_id 0 \
     --max_seq_length 512 \
     --get_context_attr \
     --batch_size 20 \

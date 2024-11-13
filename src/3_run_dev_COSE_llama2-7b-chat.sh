@@ -1,4 +1,4 @@
-gpus=$1
+gpu_id=$1
 
 model_path=meta-llama/Llama-2-7b-chat-hf
 model_name=llama2-7b-chat
@@ -18,7 +18,7 @@ do
             --cn_dir results/cn \
             --output_dir eval_results/dev_results/COSE/outputs \
             --metric_dir eval_results/dev_results/COSE/metrics \
-            --gpu_id $gpus \
+            --gpu_id $gpu_id \
             --max_seq_length 512 \
             --enhance_cn_num ${enhance_cn_num} \
             --enhance_strength ${enhance_strength}

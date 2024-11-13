@@ -40,7 +40,7 @@ def convert_to_triplet_ig(ig_list):
     return ig_triplet
 
 
-def get_context_attr(idx, prompt_without_context, prompt_with_context, objs, answer_obj, args, model, tokenizer, device):
+def get_context_attr(idx, prompt_without_context, prompt_with_context, answer_obj, args, model, tokenizer, device):
     if "gemma" in args.model_name:
         tokens = tokenizer.tokenize(f" {answer_obj}") # Space required for correct tokenization
     else:
@@ -258,14 +258,10 @@ def main():
             trap_index = 1 if example["answer_index"]==0 else 0 
             answer_obj = classes[answer_index]
             trap_obj= classes[trap_index]
-            objs = {
-                "answer_obj": answer_obj,
-                "trap_obj": trap_obj,
-            }
             prompt_with_context = example["prompt"]
             prompt_without_context = prompt_with_context.split(": ")[-1]
             
-            res_dict = get_context_attr(idx, prompt_without_context, prompt_with_context, objs, answer_obj, args, model, tokenizer, device)
+            res_dict = get_context_attr(idx, prompt_without_context, prompt_with_context, answer_obj, args, model, tokenizer, device)
             res_dict["all_attr_gold"] = convert_to_triplet_ig(res_dict["all_attr_gold"])
             
             fw.write(res_dict)

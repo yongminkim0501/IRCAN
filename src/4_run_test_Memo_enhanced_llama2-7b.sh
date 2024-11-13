@@ -1,4 +1,4 @@
-gpus=$1
+gpu_id=$1
 
 model_path=meta-llama/Llama-2-7b-hf
 model_name=llama2-7b
@@ -44,7 +44,7 @@ done
 #             --cn_dir results/cn \
 #             --output_dir eval_results/test_results/Memo/outputs \
 #             --metric_dir eval_results/test_results/Memo/metrics \
-#             --gpus $gpus \
+#             --gpu_id $gpu_id \
 #             --max_seq_length 128 \
 #             --enhance_cn_num ${enhance_cn_num} \
 #             --enhance_strength ${enhance_strength} \
