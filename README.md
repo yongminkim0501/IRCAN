@@ -18,7 +18,7 @@ It is widely acknowledged that large language models (LLMs) encode a vast reserv
 
 ## Overview
 
-![](overview.png)
+![](https://github.com/danshi777/IRCAN/blob/main/overview.png)
 
 *Figure 1: The diagram of IRCAN. When an LLM faces a knowledge conflict between the context and its inherent knowledge, IRCAN first calculates the attribution score for each neuron to measure its contribution to processing the context. It then identifies context-aware neurons by taking the intersection of neurons with the highest scores. Subsequently, the identified neurons are reweighted so that IRCAN could guide the model to be more aligned with the contextual knowledge, ensuring greater fidelity to the context.*
 
