@@ -20,7 +20,7 @@ It is widely acknowledged that large language models (LLMs) encode a vast reserv
 
 ![](overview.png)
 
-
+*Figure 1: The diagram of IRCAN. When an LLM faces a knowledge conflict between the context and its inherent knowledge, IRCAN first calculates the attribution score for each neuron to measure its contribution to processing the context. It then identifies context-aware neurons by taking the intersection of neurons with the highest scores. Subsequently, the identified neurons are reweighted so that IRCAN could guide the model to be more aligned with the contextual knowledge, ensuring greater fidelity to the context.*
 
 ## How to Run
 
@@ -30,7 +30,7 @@ It is widely acknowledged that large language models (LLMs) encode a vast reserv
 #### 1. Calculate the Context-Aware Attribution
 
 ```
-bash src/1_run_calculate_completion_Memo_llama2-7b.sh 0
+bash src/1_run_calculate_completion_Memo_llama2-7b.sh
 ```
 
 #### 2. Process Context-Aware Neurons
