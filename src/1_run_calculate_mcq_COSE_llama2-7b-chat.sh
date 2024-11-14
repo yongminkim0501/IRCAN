@@ -8,5 +8,4 @@ python src/1_calculate_attribution_mcq.py \
     --max_seq_length 512 \
     --get_context_attr \
     --batch_size 20 \
-    --num_batch 1 \
     --batch_size_per_inference 10

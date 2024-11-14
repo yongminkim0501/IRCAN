@@ -6,5 +6,4 @@ python src/1_calculate_attribution_completion.py \
     --output_dir results/attribution/ \
     --gpu_id 0 \
     --max_seq_length 128 \
-    --batch_size 20 \
-    --num_batch 1 \
+    --batch_size 20

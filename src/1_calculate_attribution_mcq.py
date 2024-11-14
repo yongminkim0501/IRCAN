@@ -20,12 +20,12 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message
 logger = logging.getLogger(__name__)
 
 
-def scaled_input(minimum_weight, maximum_weights, batch_size, num_batch):
+def scaled_input(minimum_activations, maximum_activations, batch_size, num_batch):
 
     num_points = batch_size * num_batch
-    step = (maximum_weights - minimum_weight) / num_points  # (1, ffn_size)
+    step = (maximum_activations - minimum_activations) / num_points  # (1, ffn_size)
 
-    res = torch.cat([torch.add(minimum_weight, step * i) for i in range(1, num_points + 1)], dim=0)  # (num_points, ffn_size)
+    res = torch.cat([torch.add(minimum_activations, step * i) for i in range(1, num_points + 1)], dim=0)  # (num_points, ffn_size)
     return res, step[0]
 
 
@@ -62,41 +62,41 @@ def get_context_attr(idx, prompt_without_context, prompt_with_context, example, 
     # record results
     res_dict = {
         'id': idx,
-        'wo_all_ffn_weights': [],
-        'w_all_ffn_weights': [],
+        'wo_all_ffn_activations': [],
+        'w_all_ffn_activations': [],
         'all_attr_gold': [],
     }
 
     for tgt_layer in range(model.model.config.num_hidden_layers):
-        wo_ffn_weights_dict = dict()
+        wo_ffn_activations_dict = dict()
         def wo_forward_hook_fn(module, inp, outp):
-            wo_ffn_weights_dict['input'] = inp[0]  # inp's type is Tuple
+            wo_ffn_activations_dict['input'] = inp[0]  # inp's type is Tuple
 
-        w_ffn_weights_dict = dict()
+        w_ffn_activations_dict = dict()
         def w_forward_hook_fn(module, inp, outp):
-            w_ffn_weights_dict['input'] = inp[0]
-        # ========================== get weights when there is no context in the prompt =========================
+            w_ffn_activations_dict['input'] = inp[0]
+        # ========================== get activations when there is no context in the prompt =========================
         wo_hook = model.model.layers[tgt_layer].mlp.down_proj.register_forward_hook(wo_forward_hook_fn)
         with torch.no_grad():
             wo_outputs = model(input_ids=wo_input_ids, attention_mask=wo_attention_mask)
-        wo_ffn_weights = wo_ffn_weights_dict['input'].detach()
-        wo_ffn_weights = wo_ffn_weights[:, -1, :]
+        wo_ffn_activations = wo_ffn_activations_dict['input'].detach()
+        wo_ffn_activations = wo_ffn_activations[:, -1, :]
         wo_logits = wo_outputs.logits[:, -1, :]
         wo_hook.remove()
         
-        # =========================== get weights when there is context in the prompt ============================
+        # =========================== get activations when there is context in the prompt ============================
         w_hook = model.model.layers[tgt_layer].mlp.down_proj.register_forward_hook(w_forward_hook_fn)
         with torch.no_grad():
             w_outputs = model(input_ids=w_input_ids, attention_mask=w_attention_mask)
-        w_ffn_weights = w_ffn_weights_dict['input'].detach()
-        w_ffn_weights = w_ffn_weights[:, -1, :]
+        w_ffn_activations = w_ffn_activations_dict['input'].detach()
+        w_ffn_activations = w_ffn_activations[:, -1, :]
         w_logits = w_outputs.logits[:, -1, :]
         w_hook.remove()
         
-        wo_ffn_weights.requires_grad_(True)
-        w_ffn_weights.requires_grad_(True)
-        scaled_weights, weights_step = scaled_input(wo_ffn_weights, w_ffn_weights, args.batch_size, args.num_batch)
-        scaled_weights.requires_grad_(True)
+        wo_ffn_activations.requires_grad_(True)
+        w_ffn_activations.requires_grad_(True)
+        scaled_activations, activations_step = scaled_input(wo_ffn_activations, w_ffn_activations, args.batch_size, args.num_batch)
+        scaled_activations.requires_grad_(True)
 
         # integrated grad at the gold label for each layer
         ig_gold = None
@@ -104,14 +104,14 @@ def get_context_attr(idx, prompt_without_context, prompt_with_context, example, 
             grad = None
             all_grads = None
             for i in range(0, args.batch_size, args.batch_size_per_inference):
-                batch_weights = scaled_weights[i: i + args.batch_size_per_inference] # (batch_size_per_inference, ffn_size)
-                batch_w_weights = w_ffn_weights.repeat(args.batch_size_per_inference, 1) # (batch_size_per_inference, ffn_size)
+                batch_activations = scaled_activations[i: i + args.batch_size_per_inference] # (batch_size_per_inference, ffn_size)
+                batch_w_activations = w_ffn_activations.repeat(args.batch_size_per_inference, 1) # (batch_size_per_inference, ffn_size)
                 batched_w_input_ids = w_input_ids.repeat(args.batch_size_per_inference, 1) # (batch_size_per_inference, seq_len)
                 batched_w_attention_mask = w_attention_mask.repeat(args.batch_size_per_inference, 1) # (batch_size_per_inference, seq_len)
 
                 def i_forward_hook_change_fn(module, inp):
                     inp0 = inp[0].detach()
-                    inp0[:, -1, :] = batch_weights
+                    inp0[:, -1, :] = batch_activations
                     inp = tuple([inp0])
                     return inp
                 change_hook = model.model.layers[tgt_layer].mlp.down_proj.register_forward_pre_hook(i_forward_hook_change_fn)
@@ -120,7 +120,8 @@ def get_context_attr(idx, prompt_without_context, prompt_with_context, example, 
                 # compute final grad at a layer at the last position
                 tgt_logits = outputs.logits[:, -1, :] # (batch_size_per_inference, n_vocab)
                 tgt_probs = F.softmax(tgt_logits, dim=1) # (batch_size_per_inference, n_vocab)
-                grads_i = torch.autograd.grad(torch.unbind(tgt_probs[:, gold_label_id]), w_ffn_weights, retain_graph=True) # grads_i[0].shape: (1, ffn_size)
+                # grads_i = torch.autograd.grad(torch.unbind(tgt_probs[:, gold_label_id]), batch_activations)
+                grads_i = torch.autograd.grad(torch.unbind(tgt_probs[:, gold_label_id]), w_ffn_activations, retain_graph=True) # grads_i[0].shape: (1, ffn_size)
                 del tgt_probs
 
                 change_hook.remove()
@@ -129,9 +130,9 @@ def get_context_attr(idx, prompt_without_context, prompt_with_context, example, 
             grad = all_grads.sum(dim=0)
             ig_gold = grad if ig_gold is None else torch.add(ig_gold, grad)
             
-        ig_gold = ig_gold * weights_step  # (ffn_size)
-        res_dict['wo_all_ffn_weights'].append(wo_ffn_weights.squeeze().tolist())
-        res_dict['w_all_ffn_weights'].append(w_ffn_weights.squeeze().tolist())
+        ig_gold = ig_gold * activations_step  # (ffn_size)
+        res_dict['wo_all_ffn_activations'].append(wo_ffn_activations.squeeze().tolist())
+        res_dict['w_all_ffn_activations'].append(w_ffn_activations.squeeze().tolist())
         res_dict['all_attr_gold'].append(ig_gold.tolist())
         
     return res_dict
@@ -186,14 +187,14 @@ def main():
                         help="random seed for initialization")
 
     # parameters about integrated grad
-    parser.add_argument("--batch_size",
-                        default=20,
-                        type=int,
-                        help="Total batch size for cut.")
     parser.add_argument("--num_batch",
                         default=1,
                         type=int,
-                        help="Num batch of an example.")
+                        help="Number of examples for each run.")
+    parser.add_argument("--batch_size",
+                        default=20,
+                        type=int,
+                        help="The m in the paper.")
     parser.add_argument("--batch_size_per_inference",
                         default=2,
                         type=int,
