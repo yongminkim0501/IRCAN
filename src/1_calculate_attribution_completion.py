@@ -231,7 +231,6 @@ def main():
         for json_line in fin:
             line = json.loads(json_line)
             data.append(line)
-    data = data[:4]
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     print("***** CUDA.empty_cache() *****")
