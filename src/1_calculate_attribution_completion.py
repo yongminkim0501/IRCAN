@@ -100,7 +100,7 @@ def get_context_attr(idx, prompt_without_context, prompt_with_context, answer_ob
         for batch_idx in range(args.num_batch):
             grad = None
             all_grads = None
-            for i in range(0, args.batch_size, args.batch_size_per_inference):
+            for i in range(0, args.num_points, args.batch_size_per_inference):
                 # print(i, i + args.batch_size_per_inference)
                 batch_activations = scaled_activations[i: i + args.batch_size_per_inference] # (batch_size_per_inference, ffn_size)
                 batch_w_activations = w_ffn_activations.repeat(args.batch_size_per_inference, 1) # (batch_size_per_inference, ffn_size)
